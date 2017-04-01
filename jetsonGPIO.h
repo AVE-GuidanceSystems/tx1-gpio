@@ -64,6 +64,14 @@ enum pinValues {
 }  ;
 
 enum jetsonGPIONumber {
+	//Currently raspberry pi available pins
+	gpio2   =  2,
+	gpio3   =  3,
+	gpio4   =  4,
+	gpio17  =  17,
+	gpio27  =  27,
+	
+	//currently available TX1 pins
     gpio57  =  57,    // J3A1 - Pin 50
 	gpio160 = 160,	  // J3A2 - Pin 40	
 	gpio161 = 161,    // J3A2 - Pin 43

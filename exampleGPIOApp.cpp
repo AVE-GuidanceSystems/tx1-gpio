@@ -3,65 +3,91 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
+#include <time.h>
 #include "jetsonGPIO.h"
 using namespace std;
+
+int getDistance(int, int);
+void printDistance(int, int);
 
 int main(int argc, char *argv[]){
 
     cout << "Testing the GPIO Pins" << endl;
-
-    jetsonGPIO redLED = gpio165 ;
-    jetsonGPIO pushButton = gpio166 ;
-    // Make the button and led available in user space
-    gpioExport(pushButton) ;
-    gpioExport(redLED) ;
-    gpioSetDirection(pushButton,inputPin) ;
-    gpioSetDirection(redLED,outputPin) ;
-    // Reverse the button wiring; this is for when the button is wired
-    // with a pull up resistor
-    // gpioActiveLow(pushButton, true);
-
-
-    // Flash the LED 5 times
-    for(int i=0; i<5; i++){
-        cout << "Setting the LED on" << endl;
-        gpioSetValue(redLED, on);
-        usleep(200000);         // on for 200ms
-        cout << "Setting the LED off" << endl;
-        gpioSetValue(redLED, off);
-        usleep(200000);         // off for 200ms
-    }
-
-    // Wait for the push button to be pressed
-    cout << "Please press the button!" << endl;
-
-    unsigned int value = low;
-    int ledValue = low ;
-    // Turn off the LED
-    gpioSetValue(redLED,low) ;
-    for (int i = 0 ; i < 10000 ; i++) {
-        gpioGetValue(pushButton, &value) ;
-        // Useful for debugging
-        // cout << "Button " << value << endl;
-        if (value==high && ledValue != high) {
-            // button is pressed ; turn the LED on
-            ledValue = high ;
-            gpioSetValue(redLED,on) ;
-        } else {
-            // button is *not* pressed ; turn the LED off
-            if (ledValue != low) {
-                ledValue = low ;
-                gpioSetValue(redLED,off) ;
-            }
-
-        }
-        usleep(1000); // sleep for a millisecond
-    }
-
-    cout << "GPIO example finished." << endl;
-    gpioUnexport(redLED);     // unexport the LED
-    gpioExport(pushButton);      // unexport the push button
-    return 0;
+	
+	//Declare GPIO Ports to use
+    jetsonGPIO trig1 = gpio17 ;
+    jetsonGPIO echo1 = gpio27 ;
+    jetsonGPIO LED1 = gpio4 ;
+    
+    //Reset Pins
+    gpioClose(gpio17);
+    gpioClose(gpio27);
+    gpioClose(gpio4);
+    
+    gpioOpen(gpio17);
+    gpioOpen(gpio27);
+    gpioOpen(gpio4);
+    
+    //Make GPIO Avialable for use
+    gpioExport(trig1);
+    gpioExport(echo1);
+    gpioExport(gpio4);
+    
+    gpioSetDirection(trig1, 1); //set trigger as output
+    gpioSetDirection(echo1, 0); //set echo as input
+    gpioSetDirection(LED1, 1); //set LED as output
+    
+    while(1){
+		int distance1 = getDistance(trig1, echo1);
+		if ((distance1 >= 300) || (distance1 <= 20)){
+			gpioSetValue(LED1, 0); //Turn off led when out of range
+		}
+		else
+			gpioSetValue(LED1, 1); //Turn on when in range
+		
+		printDistance(1, distance1);
+		usleep(10);
+	}
+    
+    
+}
+int getDistance(int trigPin, int echoPin){
+	clock_t start;
+	clock_t end;
+	
+	gpioSetValue(trigPin, 1); //activate Trigger
+	usleep(10);
+	start = clock(); 
+	//gpioSetValue(trigPin, 0); //deactivate trigger
+	
+	unsigned int tempValue = 0;
+	while (tempValue == 0){
+			gpioGetValue(echoPin, &tempValue); //continue reading if no edge detected
+	}
+	gpioSetValue(trigPin, 0); //deactivate trigger
+	
+	start = clock(); //calculates current time --start of pulse
+	while (tempValue == 1){
+			gpioGetValue(echoPin, &tempValue); //continue reading if no edge detected
+	}
+	end = clock();//calculate current time --end of pulse
+	usleep(10000);	
+	double pulseTime = (end - start); 
+	int distance = pulseTime / 58;
+	//cout << pulseTime << "  Dist:  " << distance << endl;
+	
+	return distance;
 }
 
-
+void printDistance(int id, int dist){
+	cout << "Ultrasonic Sensor #" << id << endl;
+	if ((dist >= 300) || (dist <= 20)){
+		cout << "Out of Range" << endl;
+	}
+	else{
+		for(int i = 0; i <= dist; i++){
+			cout << "-";
+		}
+		cout << dist << "cm" << endl;
+	}
+}
