@@ -70,9 +70,13 @@ enum jetsonGPIONumber {
 	gpio4   =  4,
 	gpio17  =  17,
 	gpio27  =  27,
+	gpio5   =  5,
+	gpio6   =  6,
+	gpio13  =  13,
+	gpio19  =  19,
 	
 	//currently available TX1 pins
-    gpio57  =  57,    // J3A1 - Pin 50
+ 	gpio57  =  57,    // J3A1 - Pin 50
 	gpio160 = 160,	  // J3A2 - Pin 40	
 	gpio161 = 161,    // J3A2 - Pin 43
 	gpio162 = 162,    // J3A2 - Pin 46
